@@ -16,16 +16,16 @@ ALTER TABLE products
 ADD product_sales DECIMAL(10, 2) NOT NULL;
 
 INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES
-('iMarku Pro Kitchen 8 inch Chefs Knife High Carbon Stainless Steel', 'Kitchen & Dining', 23.99, 23),
-('EXPO Low-Odor Dry Erase Markers, Chisel-Tip, Assorted Colors, 36-Count', 'Office Products', 14.00, 56),
-('Kindle Paperwhite E-Reader Black 6" High-Resolution Display (300 ppi) with Built-in Light, Wi-Fi', 'Bamazon Devices', 99.99, 200),
-('Fitbit Ionic Smartwatch, Blue-Gray/Silver, One Size (S & L Bands Included)', 'Health & Personal Care', 269.95, 48),
-('Bluetooth Headphones, TaoTronics Wireless 4.1 Magnetic Earbuds with Built-in Mic Blue', 'Cell Phones & Accessories', 19.49, 143),
-('Mens Slim Front Pocket Wallet ID Window Card Case with RFID Blocking', 'Bamazon Fashion', 11.99, 78),
-('Scarleton Large Drawstring Handbag H1078', 'Amazon Fashion', 9.99, 56),
-('Enkeeo No Pedal Balance Bike for Ages 2 to 5, 110 lbs Capacity (10/12 inch)', 'Sports & Outdoors', 35.99, 30),
-('Bushnell Trophy Binocular, 10x42mm', 'Sports & Outdoors', 62.99, 77),
-('BamazonBasics High-Back Executive Chair - Brown', 'Office Products', 109.99, 60);
+('Stainless Steel Chefs Knife', 'Kitchen', 23.99, 23),
+('EXPO Dry Erase Markers', 'Office Products', 14.00, 56),
+('Kindle', 'Electronics', 99.99, 200),
+('Fitbit Smartwatch', 'Electronics', 269.95, 48),
+('Bluetooth Wireless Headphones', 'Electronics', 19.49, 143),
+('RFID Wallet', 'Bamazon Fashion', 11.99, 78),
+('Large Drawstring Handbag', 'Bamazon Fashion', 9.99, 56),
+('Kids Balance Bike', 'Sports & Outdoors', 35.99, 30),
+('Camo Binoculars', 'Sports & Outdoors', 62.99, 77),
+('BamazonBasics High-Back Executive Chair', 'Office Products', 109.99, 60);
 
 CREATE TABLE departments (
     department_id INT NOT NULL AUTO_INCREMENT,
@@ -34,8 +34,9 @@ CREATE TABLE departments (
     PRIMARY KEY (department_id)
 );
 
-ALTER TABLE departments
-ADD product_sales DECIMAL(10, 2) NOT NULL,
-ADD total_profit DECIMAL(10, 2) NOT NULL;
-
--- INSERT INTO departments (department_name, over_head_costs) VALUES
+INSERT INTO departments (department_name, over_head_costs)
+VALUES ('Kitchen', 3000),
+('Office Products', 6000),
+('Electronics', 10000),
+('Bamazon Fashion', 8000),
+('Sports & Outdoors', 7000);

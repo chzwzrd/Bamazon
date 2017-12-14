@@ -125,7 +125,8 @@ var askHowMany = function(chosenID) {
                 // update database to reflect new stock quantity after sale
                 connection.query('UPDATE products SET ? WHERE ?', [
                     {
-                        stock_quantity: chosenItem[0][0].stock_quantity - answer.howMany
+                        stock_quantity: chosenItem[0][0].stock_quantity - answer.howMany,
+                        product_sales: chosenItem[0][0].price * answer.howMany
                     },
                     {
                         item_id: chosenItem[0][0].item_id

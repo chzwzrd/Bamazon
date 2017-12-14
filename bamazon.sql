@@ -12,6 +12,9 @@ CREATE TABLE products (
     PRIMARY KEY (item_id)
 );
 
+ALTER TABLE products
+ADD product_sales DECIMAL(10, 2) NOT NULL;
+
 INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES
 ('iMarku Pro Kitchen 8 inch Chefs Knife High Carbon Stainless Steel', 'Kitchen & Dining', 23.99, 23),
 ('EXPO Low-Odor Dry Erase Markers, Chisel-Tip, Assorted Colors, 36-Count', 'Office Products', 14.00, 56),
@@ -23,3 +26,16 @@ INSERT INTO products (product_name, department_name, price, stock_quantity) VALU
 ('Enkeeo No Pedal Balance Bike for Ages 2 to 5, 110 lbs Capacity (10/12 inch)', 'Sports & Outdoors', 35.99, 30),
 ('Bushnell Trophy Binocular, 10x42mm', 'Sports & Outdoors', 62.99, 77),
 ('BamazonBasics High-Back Executive Chair - Brown', 'Office Products', 109.99, 60);
+
+CREATE TABLE departments (
+    department_id INT NOT NULL AUTO_INCREMENT,
+    department_name TEXT NOT NULL,
+    over_head_costs DECIMAL(10, 2) NOT NULL,
+    PRIMARY KEY (department_id)
+);
+
+ALTER TABLE departments
+ADD product_sales DECIMAL(10, 2) NOT NULL,
+ADD total_profit DECIMAL(10, 2) NOT NULL;
+
+-- INSERT INTO departments (department_name, over_head_costs) VALUES

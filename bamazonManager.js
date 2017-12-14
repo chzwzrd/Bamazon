@@ -15,19 +15,21 @@ connection.connect((err) => {
     if (err) throw err;
     console.log('Connection successful');
     // display all items from database once mysql connection has been established
-    resetCart();
+    resetData();
     displayMenu();
 });
 
 // GLOBAL VARIABLES
 // =====================================================================================
 var itemList = [];
-var chosenItem = [];
+var itemToUpdate = [];
+var itemToDelete = [];
 
 // FUNCTIONS
 // =====================================================================================
-var resetCart = function() {
-    chosenItem = [];
+var resetData = function() {
+    itemToUpdate = [];
+    itemToDelete = [];
 }
 
 var displayMenu = function() {
@@ -39,7 +41,8 @@ var displayMenu = function() {
             'View Products for Sale',
             'View Low Inventory',
             'Add to Inventory',
-            'Add New Product'
+            'Add New Product',
+            'Remove A Product'
         ]
     }).then((answer) => {
         switch (answer.action) {
@@ -54,6 +57,9 @@ var displayMenu = function() {
             break;
             case 'Add New Product':
                 addNewProduct();
+            break;
+            case 'Remove A Product':
+                deleteProduct();
             break;
         }
     });
@@ -86,14 +92,87 @@ var addToInventory = function() {
 };
 
 var addNewProduct = function() {
-    
+    inquirer.prompt([
+        {
+            name: 'name',
+            type: 'input',
+            message: 'Enter the product name:'
+        },
+        {
+            name: 'department',
+            type: 'input',
+            message: 'Enter the product department:'
+        },
+        {
+            name: 'price',
+            type: 'input',
+            message: 'Enter the product price:',
+            validate: (value) => {
+                if (!isNaN(value)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }, 
+        {
+            name: 'stockNum',
+            type: 'input',
+            message: 'Enter the number of items in stock:',
+            validate: (value) => {
+                if (!isNaN(value)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    ]).then((answers) => {
+        connection.query('INSERT INTO products SET ?', {
+            product_name: answers.name,
+            department_name: answers.department,
+            price: answers.price,
+            stock_quantity: answers.stockNum
+        }, (err, res) => {
+            if (err) throw err;
+            console.log('Item successfully added!');
+            connection.end();
+        });
+    });
+};
+
+var deleteProduct = function() {
+    inquirer.prompt({
+        name: 'itemID',
+        type: 'input',
+        message: 'Enter the ID of the product you\'d like to remove:'
+    }).then((answer) => {
+        connection.query('SELECT * FROM products WHERE ?', { item_id: answer.itemID }, (err, res) => {
+            inquirer.prompt({
+                name: 'confirm',
+                type: 'confirm',
+                message: `You would like to delete` + chalk.blue.bold(` '${res[0].product_name}'. `) + `Is this correct?`
+            }).then((answer) => {
+                if (answer.confirm) {
+                    itemToDelete.push(res);
+                    connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete[0][0].item_id }, (err, res) => {
+                        if (err) throw err;
+                        console.log('Item successfully removed!');
+                        connection.end();
+                    });
+                } else {
+                    deleteProduct();
+                }
+            });
+        });
+    });
 };
 
 var askForID = function() {
     inquirer.prompt({
         name: 'itemID',
         type: 'input',
-        message: 'Enter the ID of the item you\'d like to restock:',
+        message: 'Enter the ID of the item you\'d like to update:',
         // validate input is number from 1-10
         validate: (value) => {
             if (!isNaN(value) && (value > 0 && value <= 10)) {
@@ -118,7 +197,7 @@ var confirmItem = function(product, object) {
         message: `You chose` + chalk.blue.bold(` '${product}'. `) + `Is this correct?`
     }).then((answer) => {
         if (answer.confirmItem) {
-            chosenItem.push(object);
+            itemToUpdate.push(object);
             askHowMany();
         } else {
             askForID();
@@ -140,16 +219,16 @@ var askHowMany = function() {
             }
         }
     }).then((answer) => {
-        chosenItem.push(answer.howMany);
+        itemToUpdate.push(answer.howMany);
         connection.query('UPDATE products SET ? WHERE ?', [
             {
-                stock_quantity: Number(chosenItem[0][0].stock_quantity) + Number(answer.howMany)
+                stock_quantity: Number(itemToUpdate[0][0].stock_quantity) + Number(answer.howMany)
             },
             {
-                item_id: chosenItem[0][0].item_id
+                item_id: itemToUpdate[0][0].item_id
             }
         ], (err, res) => {
-            console.log(chalk.blue.bold(`Inventory updated! Item ${chosenItem[0][0].item_id} now has ${Number(chosenItem[0][0].stock_quantity) + Number(chosenItem[1])} items in stock`));
+            console.log(chalk.blue.bold(`Inventory updated! Item ${itemToUpdate[0][0].item_id} now has ${Number(itemToUpdate[0][0].stock_quantity) + Number(itemToUpdate[1])} items in stock`));
             connection.end();
         });
     });

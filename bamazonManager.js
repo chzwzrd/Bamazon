@@ -50,11 +50,25 @@ var displayMenu = function() {
 };
 
 var viewActiveProducts = function() {
-
+    connection.query(`SELECT * FROM products`, (err, res) => {
+        for (var i = 0; i < res.length; i++) {
+            console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+        }
+        connection.end();
+    });
 };
 
 var viewLowInventory = function() {
-
+    connection.query(`SELECT * FROM products WHERE stock_quantity < 5 ORDER BY stock_quantity DESC`, (err, res) => {
+        if (res.length > 0) {
+            for (var i = 0; i < res.length; i++) {
+                console.log(chalk.blue.bold(`\n\tStock Quantity: ${res[i].stock_quantity}\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+            }
+        } else {
+            console.log(chalk.blue.bold('No low-stock items!'));
+        }
+        connection.end();
+    });
 };
 
 var addToInventory = function() {
@@ -62,5 +76,5 @@ var addToInventory = function() {
 };
 
 var addNewProduct = function() {
-    
+
 };

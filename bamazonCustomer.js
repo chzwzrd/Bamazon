@@ -36,7 +36,7 @@ var displayItems = function() {
         // console.log(res);
         for (var i = 0; i < res.length; i++) {
             itemList.push(res[i]);
-            console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n\n--------------------------------`));
+            console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
         // ask user to enter ID of item they wish to purchase
         askForID();

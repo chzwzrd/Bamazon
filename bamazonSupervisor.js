@@ -14,34 +14,60 @@ var connection = mysql.createConnection({
 connection.connect((err) => {
     if (err) throw err;
     console.log('Connection successful');
+    resetData();
     // display all items from database once mysql connection has been established
     displayMenu();
 });
 
+// GLOBAL VARIABLES
+// =====================================================================================
+var deptToDelete = [];
+
 // FUNCTIONS
 // =====================================================================================
+var resetData = function() {
+    deptToDelete = [];
+};
+
 var displayMenu = function() {
     inquirer.prompt({
         name: 'action',
         type: 'rawlist',
         message: 'Choose an action:',
         choices: [
+            'View Departments',
             'View Product Sales by Department',
-            'Create New Department'
+            'Create New Department',
+            'Delete A Department'
         ]
     }).then((answer) => {
         switch (answer.action) {
+            case 'View Departments':
+                viewDepartments();
+                break;
             case 'View Products Sales by Department':
                 viewDepartmentSales();
                 break;
             case 'Create New Department':
                 createDepartment();
                 break;
+            case 'Delete A Department':
+                deleteDepartment();
+                break;
         }
     });
 };
 
-var viewActiveProducts = function() {
+var viewDepartments = function() {
+    connection.query('SELECT * FROM departments', (err, res) => {
+        for (var i = 0; i < res.length; i++) {
+            console.log(chalk.blue.bold(`\n\tDept ID: ${res[i].department_id}\n\tDept Name: ${res[i].department_name}\n\tOverhead Costs: $${res[i].over_head_costs}\n`));
+        }
+        connection.end();
+    });
+};
+
+var viewDepartmentSales = function() {
     connection.query(`SELECT * FROM products`, (err, res) => {
         for (var i = 0; i < res.length; i++) {
             console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
@@ -50,39 +76,17 @@ var viewActiveProducts = function() {
     });
 };
 
-var viewLowInventory = function() {
-    connection.query(`SELECT * FROM products WHERE stock_quantity < 5 ORDER BY stock_quantity DESC`, (err, res) => {
-        if (res.length > 0) {
-            for (var i = 0; i < res.length; i++) {
-                console.log(chalk.blue.bold(`\n\tStock Quantity: ${res[i].stock_quantity}\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
-            }
-        } else {
-            console.log(chalk.blue.bold('No low-stock items!'));
-        }
-        connection.end();
-    });
-};
-
-var addToInventory = function() {
-    askForID();
-};
-
-var addNewProduct = function() {
+var createDepartment = function() {
     inquirer.prompt([
         {
             name: 'name',
             type: 'input',
-            message: 'Enter the product name:'
+            message: 'Enter the department name:'
         },
         {
-            name: 'department',
+            name: 'overhead',
             type: 'input',
-            message: 'Enter the product department:'
-        },
-        {
-            name: 'price',
-            type: 'input',
-            message: 'Enter the product price:',
+            message: 'Enter the overhead costs for this department:',
             validate: (value) => {
                 if (!isNaN(value)) {
                     return true;
@@ -91,121 +95,41 @@ var addNewProduct = function() {
                 }
             }
         },
-        {
-            name: 'stockNum',
-            type: 'input',
-            message: 'Enter the number of items in stock:',
-            validate: (value) => {
-                if (!isNaN(value)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
     ]).then((answers) => {
-        connection.query('INSERT INTO products SET ?', {
-            product_name: answers.name,
-            department_name: answers.department,
-            price: answers.price,
-            stock_quantity: answers.stockNum
+        connection.query('INSERT INTO departments SET ?', {
+            department_name: answers.name,
+            over_head_costs: answers.overhead
         }, (err, res) => {
             if (err) throw err;
-            console.log('Item successfully added!');
+            console.log('Department successfully added!');
             connection.end();
         });
     });
 };
 
-var deleteProduct = function() {
+var deleteDepartment = function() {
     inquirer.prompt({
-        name: 'itemID',
+        name: 'deptID',
         type: 'input',
-        message: 'Enter the ID of the product you\'d like to remove:'
+        message: 'Enter the ID of the department you\'d like to remove:'
     }).then((answer) => {
-        connection.query('SELECT * FROM products WHERE ?', { item_id: answer.itemID }, (err, res) => {
+        connection.query('SELECT * FROM departments WHERE ?', { department_id: answer.deptID }, (err, res) => {
             inquirer.prompt({
                 name: 'confirm',
                 type: 'confirm',
-                message: `You would like to delete` + chalk.blue.bold(` '${res[0].product_name}'. `) + `Is this correct?`
+                message: `You would like to delete` + chalk.blue.bold(` '${res[0].department_name}'. `) + `Is this correct?`
             }).then((answer) => {
                 if (answer.confirm) {
-                    itemToDelete.push(res);
-                    connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete[0][0].item_id }, (err, res) => {
+                    deptToDelete.push(res);
+                    connection.query('DELETE FROM departments WHERE ?', { department_id: deptToDelete[0][0].department_id }, (err, res) => {
                         if (err) throw err;
-                        console.log('Item successfully removed!');
+                        console.log('Department successfully deleted!');
                         connection.end();
                     });
                 } else {
-                    deleteProduct();
+                    deleteDepartment();
                 }
             });
         });
     });
 };
-
-var askForID = function() {
-    inquirer.prompt({
-        name: 'itemID',
-        type: 'input',
-        message: 'Enter the ID of the item you\'d like to update:',
-        // validate input is number from 1-10
-        validate: (value) => {
-            if (!isNaN(value) && (value > 0 && value <= 10)) {
-                return true;
-            } else {
-                console.log(chalk.red(' => Please enter a number from 1-10'));
-                return false;
-            }
-        }
-        // select all rows where ID = user's input
-    }).then((answer) => {
-        connection.query('SELECT * FROM products WHERE ?', { item_id: answer.itemID }, (err, res) => {
-            confirmItem(res[0].product_name, res);
-        });
-    });
-};
-
-var confirmItem = function(product, object) {
-    inquirer.prompt({
-        name: 'confirmItem',
-        type: 'confirm',
-        message: `You chose` + chalk.blue.bold(` '${product}'. `) + `Is this correct?`
-    }).then((answer) => {
-        if (answer.confirmItem) {
-            itemToUpdate.push(object);
-            askHowMany();
-        } else {
-            askForID();
-        }
-    });
-};
-
-var askHowMany = function() {
-    inquirer.prompt({
-        name: 'howMany',
-        type: 'input',
-        message: 'Enter the quantity you would like to add:',
-        validate: (value) => {
-            if (!isNaN(value) && value > 0) {
-                return true;
-            } else {
-                console.log(chalk.red(' => Oops, please enter a number greater than 0'));
-                return false;
-            }
-        }
-    }).then((answer) => {
-        itemToUpdate.push(answer.howMany);
-        connection.query('UPDATE products SET ? WHERE ?', [
-            {
-                stock_quantity: Number(itemToUpdate[0][0].stock_quantity) + Number(answer.howMany)
-            },
-            {
-                item_id: itemToUpdate[0][0].item_id
-            }
-        ], (err, res) => {
-            console.log(chalk.blue.bold(`Inventory updated! Item ${itemToUpdate[0][0].item_id} now has ${Number(itemToUpdate[0][0].stock_quantity) + Number(itemToUpdate[1])} items in stock`));
-            connection.end();
-        });
-    });
-}

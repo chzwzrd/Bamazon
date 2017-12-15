@@ -3,6 +3,7 @@
 var mysql = require('mysql');
 var inquirer = require('inquirer');
 var chalk = require('chalk');
+var Table = require('cli-table');
 
 var connection = mysql.createConnection({
     host: '',
@@ -60,9 +61,17 @@ var displayMenu = function() {
 
 var viewDepartments = function() {
     connection.query('SELECT * FROM departments', (err, res) => {
+        var listTable = new Table({
+            head: ['Dept ID', 'Dept Name', 'Overhead'],
+            colWidths: [10, 25, 12]
+        });
+
         for (var i = 0; i < res.length; i++) {
-            console.log(chalk.blue.bold(`\n\tDept ID: ${res[i].department_id}\n\tDept Name: ${res[i].department_name}\n\tOverhead Costs: $${res[i].over_head_costs}\n`));
+            listTable.push([res[i].department_id, res[i].department_name, `$${res[i].over_head_costs}`])
+            // console.log(chalk.blue.bold(`\n\tDept ID: ${res[i].department_id}\n\tDept Name: ${res[i].department_name}\n\tOverhead Costs: $${res[i].over_head_costs}\n`));
         }
+
+        console.log(`\n\n${listTable.toString()}\n\n`);
         connection.end();
     });
 };
@@ -88,9 +97,10 @@ var createDepartment = function() {
             type: 'input',
             message: 'Enter the overhead costs for this department:',
             validate: (value) => {
-                if (!isNaN(value)) {
+                if (!isNaN(value) && value > 0) {
                     return true;
                 } else {
+                    console.log(chalk.red(' => Oops, please enter a number greater than 0'));
                     return false;
                 }
             }
@@ -101,7 +111,7 @@ var createDepartment = function() {
             over_head_costs: answers.overhead
         }, (err, res) => {
             if (err) throw err;
-            console.log('Department successfully added!');
+            console.log(chalk.blue.bold('\n\tDepartment successfully added!\n'));
             connection.end();
         });
     });
@@ -123,7 +133,7 @@ var deleteDepartment = function() {
                     deptToDelete.push(res);
                     connection.query('DELETE FROM departments WHERE ?', { department_id: deptToDelete[0][0].department_id }, (err, res) => {
                         if (err) throw err;
-                        console.log('Department successfully deleted!');
+                        console.log(chalk.blue.bold('\n\tDepartment successfully deleted!\n'));
                         connection.end();
                     });
                 } else {

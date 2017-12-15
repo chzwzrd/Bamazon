@@ -46,7 +46,6 @@ var displayItems = function() {
         }
         
         console.log(`\n\n${listTable.toString()}\n\n`);
-
         // ask user to enter ID of item they wish to purchase
         askForID();
     });

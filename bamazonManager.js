@@ -79,7 +79,6 @@ var viewActiveProducts = function() {
         }
 
         console.log(`\n\n${listTable.toString()}\n\n`);
-
         connection.end();
     });
 };

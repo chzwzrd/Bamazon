@@ -3,6 +3,7 @@
 var mysql = require('mysql');
 var inquirer = require('inquirer');
 var chalk = require('chalk');
+var Table = require('cli-table');
 
 var connection = mysql.createConnection({
     host: '',
@@ -67,9 +68,18 @@ var displayMenu = function() {
 
 var viewActiveProducts = function() {
     connection.query(`SELECT * FROM products`, (err, res) => {
+        var listTable = new Table({
+            head: ['Item ID', 'Product Name', 'Price'],
+            colWidths: [10, 45, 12]
+        });
+
         for (var i = 0; i < res.length; i++) {
-            console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+            listTable.push([res[i].item_id, res[i].product_name, `$${res[i].price}`]);
+            // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
+
+        console.log(`\n\n${listTable.toString()}\n\n`);
+
         connection.end();
     });
 };
@@ -77,11 +87,20 @@ var viewActiveProducts = function() {
 var viewLowInventory = function() {
     connection.query(`SELECT * FROM products WHERE stock_quantity < 5 ORDER BY stock_quantity DESC`, (err, res) => {
         if (res.length > 0) {
+            var listTable = new Table({
+                head: ['Item ID', 'Items in Stock', 'Product Name', 'Price'],
+                colWidths: [10, 17, 45, 12]
+            });
+
             for (var i = 0; i < res.length; i++) {
-                console.log(chalk.blue.bold(`\n\tStock Quantity: ${res[i].stock_quantity}\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+                listTable.push([res[i].item_id, res[i].stock_quantity, res[i].product_name, `$${res[i].price}`]);
+                // console.log(chalk.blue.bold(`\n\tStock Quantity: ${res[i].stock_quantity}\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
             }
+
+            console.log(`\n\n${listTable.toString()}\n\n`);
+
         } else {
-            console.log(chalk.blue.bold('No low-stock items!'));
+            console.log(chalk.blue.bold('\n\tNo low-stock items!\n'));
         }
         connection.end();
     });
@@ -108,9 +127,10 @@ var addNewProduct = function() {
             type: 'input',
             message: 'Enter the product price:',
             validate: (value) => {
-                if (!isNaN(value)) {
+                if (!isNaN(value) && value > 0) {
                     return true;
                 } else {
+                    console.log(chalk.red(` => Oops, please enter a number greater than 0`));
                     return false;
                 }
             }
@@ -120,9 +140,10 @@ var addNewProduct = function() {
             type: 'input',
             message: 'Enter the number of items in stock:',
             validate: (value) => {
-                if (!isNaN(value)) {
+                if (!isNaN(value) && value > 0) {
                     return true;
                 } else {
+                    console.log(chalk.red(` => Oops, please enter a number greater than 0`));
                     return false;
                 }
             }
@@ -135,7 +156,7 @@ var addNewProduct = function() {
             stock_quantity: answers.stockNum
         }, (err, res) => {
             if (err) throw err;
-            console.log('Item successfully added!');
+            console.log(chalk.blue.bold('\n\tItem successfully added!\n'));
             connection.end();
         });
     });
@@ -157,7 +178,7 @@ var deleteProduct = function() {
                     itemToDelete.push(res);
                     connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete[0][0].item_id }, (err, res) => {
                         if (err) throw err;
-                        console.log('Item successfully removed!');
+                        console.log(chalk.blue.bold('\n\tItem successfully removed!\n'));
                         connection.end();
                     });
                 } else {
@@ -228,7 +249,7 @@ var askHowMany = function() {
                 item_id: itemToUpdate[0][0].item_id
             }
         ], (err, res) => {
-            console.log(chalk.blue.bold(`Inventory updated! Item ${itemToUpdate[0][0].item_id} now has ${Number(itemToUpdate[0][0].stock_quantity) + Number(itemToUpdate[1])} items in stock`));
+            console.log(chalk.blue.bold(`\n\tInventory updated! '${itemToUpdate[0][0].product_name}' now has ${Number(itemToUpdate[0][0].stock_quantity) + Number(itemToUpdate[1])} items in stock\n`));
             connection.end();
         });
     });

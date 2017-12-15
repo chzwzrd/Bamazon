@@ -41,10 +41,10 @@ var displayItems = function() {
 
         for (var i = 0; i < res.length; i++) {
             itemList.push(res[i]);
-            listTable.push([res[i].item_id, res[i].product_name, res[i].price]);
+            listTable.push([res[i].item_id, res[i].product_name, `$${res[i].price}`]);
             // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
-
+        
         console.log(`\n\n${listTable.toString()}\n\n`);
 
         // ask user to enter ID of item they wish to purchase
@@ -69,7 +69,7 @@ var askForID = function() {
         }
     // select all rows where ID = user's input
     }).then((answer) => {
-        connection.query('SELECT item_id, product_name, price, stock_quantity FROM products WHERE ?', { item_id: answer.itemID }, (err, res) => {
+        connection.query('SELECT item_id, product_name, price, stock_quantity, product_sales FROM products WHERE ?', { item_id: answer.itemID }, (err, res) => {
             // confirm with user that this is the product they'd like to purchase
             confirmItem(res[0].product_name, res);
         });
@@ -111,7 +111,7 @@ var askHowMany = function(chosenID) {
         connection.query('SELECT stock_quantity FROM products WHERE ?', { item_id: chosenItem[0][0].item_id }, (err, res) => {
             // if there are not enough products in stock
             if (res[0].stock_quantity < answer.howMany) {
-                console.log(chalk.blue.bold('Sorry, insufficient quantity in stock!'));
+                console.log(chalk.blue.bold('\n\tSorry, insufficient quantity in stock!\n'));
                 // confirm if user would still like to buy this product
                 inquirer.prompt({
                     name: 'proceed',
@@ -121,27 +121,27 @@ var askHowMany = function(chosenID) {
                     if (answer.proceed) {
                         askHowMany(chosenItem[0][0].item_id);
                     } else {
-                        console.log(chalk.blue.bold('Thanks for visiting! We hope to see you again soon.'));
+                        console.log(chalk.blue.bold('\n\tThanks for visiting! We hope to see you again soon.\n'));
                         connection.end();
                     }
                 });
             // if there are enough products in stock for purchase to go through
             } else {
                 chosenItem.push(answer.howMany);
-                console.log(chalk.blue.bold('Order processing...'));
+                console.log(chalk.blue.bold('\n\tOrder processing...'));
                 // console.log(chosenItem);
 
                 // update database to reflect new stock quantity after sale
                 connection.query('UPDATE products SET ? WHERE ?', [
                     {
                         stock_quantity: chosenItem[0][0].stock_quantity - answer.howMany,
-                        product_sales: chosenItem[0][0].price * answer.howMany
+                        product_sales: chosenItem[0][0].product_sales + (chosenItem[0][0].price * answer.howMany)
                     },
                     {
                         item_id: chosenItem[0][0].item_id
                     }
                 ], (err, res) => {
-                    console.log(chalk.blue.bold(`Order confirmed!!! Your total was $${(chosenItem[0][0].price * chosenItem[1]).toFixed(2)}.`));
+                    console.log(chalk.blue.bold(`\n\tOrder confirmed!!! Your total was $${(chosenItem[0][0].price * chosenItem[1]).toFixed(2)}.\n`));
                     // ask if user would like to make another purchase
                     promptNewPurchase();
                 });
@@ -161,7 +161,7 @@ var promptNewPurchase = function() {
             resetCart();
             askForID();
         } else {
-            console.log(chalk.blue.bold('We appreciate your business. Have a great day!'));
+            console.log(chalk.blue.bold('\n\tWe appreciate your business. Have a great day!\n'));
             connection.end();
         }
     });

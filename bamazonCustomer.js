@@ -3,6 +3,7 @@
 var mysql = require('mysql');
 var inquirer = require('inquirer');
 var chalk = require('chalk');
+var Table = require('cli-table');
 
 var connection = mysql.createConnection({
     host: '',
@@ -33,11 +34,19 @@ var resetCart = function() {
 // function to display all items for sale
 var displayItems = function() {
     connection.query(`SELECT * FROM products`, (err, res) => {
-        // console.log(res);
+        var listTable = new Table({
+            head: ['Item ID', 'Product Name', 'Price'],
+            colWidths: [10, 45, 12]
+        });
+
         for (var i = 0; i < res.length; i++) {
             itemList.push(res[i]);
-            console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+            listTable.push([res[i].item_id, res[i].product_name, res[i].price]);
+            // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
+
+        console.log(`\n\n${listTable.toString()}\n\n`);
+
         // ask user to enter ID of item they wish to purchase
         askForID();
     });

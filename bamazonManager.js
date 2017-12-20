@@ -36,7 +36,7 @@ var displayMenu = function() {
     inquirer.prompt({
         name: 'action',
         type: 'rawlist',
-        message: 'Choose an action:',
+        message: '\n\nChoose an action:',
         choices: [
             'View Products for Sale',
             'View Low Inventory',
@@ -154,8 +154,8 @@ var addNewProduct = function() {
             stock_quantity: answers.stockNum
         }, (err, res) => {
             if (err) throw err;
-            console.log(chalk.blue.bold('\n\tItem successfully added!\n'));
-            connection.end();
+            console.log(chalk.blue.bold('\n\tItem successfully added!'));
+            viewActiveProducts();
         });
     });
 };
@@ -178,8 +178,8 @@ var deleteProduct = function() {
                     };
                     connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete.item_id }, (err, res) => {
                         if (err) throw err;
-                        console.log(chalk.blue.bold('\n\tItem successfully removed!\n'));
-                        connection.end();
+                        console.log(chalk.blue.bold('\n\tItem successfully removed!'));
+                        viewActiveProducts();
                     });
                 } else {
                     deleteProduct();

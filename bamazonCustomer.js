@@ -21,14 +21,13 @@ connection.connect((err) => {
 
 // GLOBAL VARIABLES
 // =====================================================================================
-var itemList = [];
-var chosenItem = [];
+var chosenItem = {};
 
 // FUNCTIONS
 // =====================================================================================
 // function to reset the chosenItem array so that previous purchases are not inside
 var resetCart = function() {
-    chosenItem = [];
+    chosenItem = {};
 }
 
 // function to display all items for sale
@@ -40,7 +39,6 @@ var displayItems = function() {
         });
 
         for (var i = 0; i < res.length; i++) {
-            itemList.push(res[i]);
             listTable.push([res[i].item_id, res[i].product_name, `$${res[i].price}`]);
             // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
@@ -83,9 +81,15 @@ var confirmItem = function(product, object) {
         message: `You chose` + chalk.blue.bold(` '${product}'. `) + `Is this correct?`
     }).then((answer) => {
         if (answer.confirmItem) {
-            chosenItem.push(object);
+            chosenItem = {
+                item_id: object[0].item_id,
+                product_name: object[0].product_name,
+                price: object[0].price,
+                stock_quantity: object[0].stock_quantity,
+                product_sales: object[0].product_sales
+            };
             // ask how many they'd like to purchase
-            askHowMany(chosenItem[0][0].item_id);
+            askHowMany(chosenItem.item_id);
         } else {
             askForID();
         }
@@ -107,7 +111,7 @@ var askHowMany = function(chosenID) {
             }
         }
     }).then((answer) => {
-        connection.query('SELECT stock_quantity FROM products WHERE ?', { item_id: chosenItem[0][0].item_id }, (err, res) => {
+        connection.query('SELECT stock_quantity FROM products WHERE ?', { item_id: chosenItem.item_id }, (err, res) => {
             // if there are not enough products in stock
             if (res[0].stock_quantity < answer.howMany) {
                 console.log(chalk.blue.bold('\n\tSorry, insufficient quantity in stock!\n'));
@@ -118,7 +122,7 @@ var askHowMany = function(chosenID) {
                     message: 'Would you still like to purchase this product?'
                 }).then((answer) => {
                     if (answer.proceed) {
-                        askHowMany(chosenItem[0][0].item_id);
+                        askHowMany(chosenItem.item_id);
                     } else {
                         console.log(chalk.blue.bold('\n\tThanks for visiting! We hope to see you again soon.\n'));
                         connection.end();
@@ -126,21 +130,21 @@ var askHowMany = function(chosenID) {
                 });
             // if there are enough products in stock for purchase to go through
             } else {
-                chosenItem.push(answer.howMany);
+                chosenItem.howMany = answer.howMany;
                 console.log(chalk.blue.bold('\n\tOrder processing...'));
                 // console.log(chosenItem);
 
                 // update database to reflect new stock quantity after sale
                 connection.query('UPDATE products SET ? WHERE ?', [
                     {
-                        stock_quantity: chosenItem[0][0].stock_quantity - answer.howMany,
-                        product_sales: chosenItem[0][0].product_sales + (chosenItem[0][0].price * answer.howMany)
+                        stock_quantity: chosenItem.stock_quantity - answer.howMany,
+                        product_sales: chosenItem.product_sales + (chosenItem.price * answer.howMany)
                     },
                     {
-                        item_id: chosenItem[0][0].item_id
+                        item_id: chosenItem.item_id
                     }
                 ], (err, res) => {
-                    console.log(chalk.blue.bold(`\n\tOrder confirmed!!! Your total was $${(chosenItem[0][0].price * chosenItem[1]).toFixed(2)}.\n`));
+                    console.log(chalk.blue.bold(`\n\tOrder confirmed!!! Your total was $${(chosenItem.price * chosenItem.howMany).toFixed(2)}.\n`));
                     // ask if user would like to make another purchase
                     promptNewPurchase();
                 });

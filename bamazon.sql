@@ -13,7 +13,7 @@ CREATE TABLE products (
 );
 
 ALTER TABLE products
-ADD product_sales DECIMAL(10, 2) NOT NULL;
+ADD product_sales DECIMAL(10, 2);
 
 INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES
 ('Stainless Steel Chefs Knife', 'Kitchen', 23.99, 23),

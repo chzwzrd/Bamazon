@@ -22,15 +22,14 @@ connection.connect((err) => {
 
 // GLOBAL VARIABLES
 // =====================================================================================
-var itemList = [];
-var itemToUpdate = [];
-var itemToDelete = [];
+var itemToUpdate = {};
+var itemToDelete = {};
 
 // FUNCTIONS
 // =====================================================================================
 var resetData = function() {
-    itemToUpdate = [];
-    itemToDelete = [];
+    itemToUpdate = {};
+    itemToDelete = {};
 }
 
 var displayMenu = function() {
@@ -69,12 +68,12 @@ var displayMenu = function() {
 var viewActiveProducts = function() {
     connection.query(`SELECT * FROM products`, (err, res) => {
         var listTable = new Table({
-            head: ['Item ID', 'Product Name', 'Price'],
-            colWidths: [10, 45, 12]
+            head: ['Item ID', 'Product Name', 'In Stock', 'Price'],
+            colWidths: [10, 45, 10, 12]
         });
 
         for (var i = 0; i < res.length; i++) {
-            listTable.push([res[i].item_id, res[i].product_name, `$${res[i].price}`]);
+            listTable.push([res[i].item_id, res[i].product_name, res[i].stock_quantity, `$${res[i].price}`]);
             // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
         }
 
@@ -87,13 +86,13 @@ var viewLowInventory = function() {
     connection.query(`SELECT * FROM products WHERE stock_quantity < 5 ORDER BY stock_quantity DESC`, (err, res) => {
         if (res.length > 0) {
             var listTable = new Table({
-                head: ['Item ID', 'Items in Stock', 'Product Name', 'Price'],
-                colWidths: [10, 17, 45, 12]
+                head: ['Item ID', 'Product Name', 'In Stock', 'Price'],
+                colWidths: [10, 45, 10, 12]
             });
 
             for (var i = 0; i < res.length; i++) {
-                listTable.push([res[i].item_id, res[i].stock_quantity, res[i].product_name, `$${res[i].price}`]);
-                // console.log(chalk.blue.bold(`\n\tStock Quantity: ${res[i].stock_quantity}\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
+                listTable.push([res[i].item_id, res[i].product_name, res[i].stock_quantity, `$${res[i].price}`]);
+                // console.log(chalk.blue.bold(`\n\tItem ID: ${res[i].item_id}\n\tProduct Name: ${res[i].product_name}\n\tPrice: $${res[i].price}\n`));
             }
 
             console.log(`\n\n${listTable.toString()}\n\n`);
@@ -174,8 +173,10 @@ var deleteProduct = function() {
                 message: `You would like to delete` + chalk.blue.bold(` '${res[0].product_name}'. `) + `Is this correct?`
             }).then((answer) => {
                 if (answer.confirm) {
-                    itemToDelete.push(res);
-                    connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete[0][0].item_id }, (err, res) => {
+                    itemToDelete = {
+                        item_id: res[0].item_id
+                    };
+                    connection.query('DELETE FROM products WHERE ?', { item_id: itemToDelete.item_id }, (err, res) => {
                         if (err) throw err;
                         console.log(chalk.blue.bold('\n\tItem successfully removed!\n'));
                         connection.end();
@@ -217,7 +218,14 @@ var confirmItem = function(product, object) {
         message: `You chose` + chalk.blue.bold(` '${product}'. `) + `Is this correct?`
     }).then((answer) => {
         if (answer.confirmItem) {
-            itemToUpdate.push(object);
+            itemToUpdate = {
+                item_id: object[0].item_id,
+                product_name: object[0].product_name,
+                department_name: object[0].department_name,
+                price: object[0].price,
+                stock_quantity: object[0].stock_quantity,
+                product_sales: object[0].product_sales
+            };
             askHowMany();
         } else {
             askForID();
@@ -239,16 +247,16 @@ var askHowMany = function() {
             }
         }
     }).then((answer) => {
-        itemToUpdate.push(answer.howMany);
+        itemToUpdate.howMany = answer.howMany;
         connection.query('UPDATE products SET ? WHERE ?', [
             {
-                stock_quantity: Number(itemToUpdate[0][0].stock_quantity) + Number(answer.howMany)
+                stock_quantity: Number(itemToUpdate.stock_quantity) + Number(answer.howMany)
             },
             {
-                item_id: itemToUpdate[0][0].item_id
+                item_id: itemToUpdate.item_id
             }
         ], (err, res) => {
-            console.log(chalk.blue.bold(`\n\tInventory updated! '${itemToUpdate[0][0].product_name}' now has ${Number(itemToUpdate[0][0].stock_quantity) + Number(itemToUpdate[1])} items in stock\n`));
+            console.log(chalk.blue.bold(`\n\tInventory updated! '${itemToUpdate.product_name}' now has ${Number(itemToUpdate.stock_quantity) + Number(itemToUpdate.howMany)} items in stock\n`));
             connection.end();
         });
     });

@@ -9,11 +9,9 @@ CREATE TABLE products (
     department_name TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     stock_quantity INT NOT NULL,
+    product_sales DECIMAL(10, 2),
     PRIMARY KEY (item_id)
 );
-
-ALTER TABLE products
-ADD product_sales DECIMAL(10, 2);
 
 INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES
 ('Stainless Steel Chefs Knife', 'Kitchen', 23.99, 23),

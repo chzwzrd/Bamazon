@@ -1,4 +1,4 @@
-# Bamazon
+# Bamazon <a id="top"></a>
 Week 12 Homework
 
 ___
@@ -43,6 +43,8 @@ The customer interface:
 ```
 ![customer demo][1_bamazonCustomer]
 
+[Scroll to top](#top)
+
 ___
 
 ## Manager Demo <a id="manager-demo"></a>
@@ -50,11 +52,15 @@ The manager interface presents a list of actions:
 
 ![manager demo: list of actions][2_bamazonManager]
 
+___
+
 ```
 1) View Products for Sale
 Displays a table of all active products available to the customer
 ```
 ![manager demo: view active products][3_bamazonManager]
+
+___
 
 
 ```
@@ -64,6 +70,7 @@ Displays a table of all products with fewer than 5 items in stock
 ```
 ![manager demo: view low inventory][4_bamazonManager]
 
+___
 
 ```
 3) Add to Inventory
@@ -71,6 +78,7 @@ Allows the manager to add more items to a product's inventory
 ```
 ![manager demo: add to inventory][5_bamazonManager]
 
+___
 
 ```
 4) Add New Product
@@ -78,12 +86,15 @@ Allows the manager to list a new product that is available for purchase
 ```
 ![manager demo: add new product][6_bamazonManager]
 
+___
 
 ```
 5) Remove A Product
 Allows the manager to remove a product from the store
 ```
 ![manager demo: remove a product][7_bamazonManager]
+
+[Scroll to top](#top)
 
 ___
 
